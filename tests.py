@@ -1,60 +1,89 @@
+import unittest
 from multimethods import Multimethod, NoMatchingMethodError
 
-#### Example usage
 
 def split_prefix(text):
+    """Returns a 2-tuple of the initial words in TEXT."""
     return text.split(' ')[:2]
 
-Multimethod('respond', split_prefix)
+
+Multimethod('respond1', split_prefix)
+"""respond1 has no default method"""
 
 @Multimethod.add("counting", "sheep")
-def respond(text):
+def respond1(text):
     return text + " put you to sleep"
 
 @Multimethod.add("flying", "pigs")
-def respond(text):
+def respond1(text):
     return text + " are rare"
 
 @Multimethod.add("walking", "fish")
-def respond(text):
+def respond1(text):
     return text + " would be surprising"
 
+
+Multimethod('respond2', split_prefix)
+"""respond2 has a default method that is used"""
+
+@Multimethod.add("incredible", "clouds")
+def respond2(text):
+    return text + " - fluffy things"
+
 @Multimethod.add(default=True)
-def respond(text):
+def respond2(text):
     return "I have no idea"
 
 
-#### Tests
+Multimethod('respond3', split_prefix)
+"""respond3 has a default method that is removed and unused"""
 
-def test_happy_case():
-    return [respond("counting sheep"),
-            respond("walking fish in the garden"),
-            respond("unexpected")]
+@Multimethod.add("gold", "bars")
+def respond3(text):
+    return text + " are golden and bar-like"
 
-def test_bad_input():
-    try:
-        return respond("too", "many", "args")
-    except Exception, e:
-        return e
+@Multimethod.add(default=True)
+def respond3(text):
+    return "Default method to be removed."
 
-def test_missing_method():
-    try:
-        return respond("foo")
-    except Exception, e:
-        return e    
 
-def test_removal():
-    respond.remove("counting", "sheep")
-    return respond("counting sheep")
+class TestMultimethods(unittest.TestCase):
 
-# test_happy_case()
-# => ['counting sheep put you to sleep',
-#     'walking fish in the garden would be surprising',
-#     'I have no idea']
+    def test_happy_case(self):
+        self.assertEqual([respond1("counting sheep"),
+                          respond1("walking fish in the garden")],
+                         ['counting sheep put you to sleep',
+                          'walking fish in the garden would be surprising'])
 
-# test_bad_input()
-# => TypeError('split_prefix() takes exactly 1 positional argument (3 given)',)
+    def test_bad_input(self):
+        outcome = None
+        try:
+            outcome = respond1("too", "many", "args")
+        except Exception, e:
+            outcome = e
+        self.assertEqual(type(outcome), TypeError)
+                        
+    def test_removal(self):
+        self.assertEqual(respond2.remove("incredible", "clouds"), True)
+        self.assertEqual(respond2("incredible clouds"),
+                         'I have no idea')
 
-# test_removal():
-# => 'I have no idea'
+    def test_nonexisting_default_removal(self):
+        self.assertEqual(respond1.remove(default=True), False)
+        self.assertEqual(respond1.default_method, None)
 
+    def test_existing_default_removal(self):
+        self.assertEqual(respond3.remove(default=True), True)
+        self.assertEqual(respond3.default_method, None)
+
+    def test_missing_method(self):
+        outcome = None
+        try:
+            outcome = respond1("foo")
+        except Exception, e:
+            outcome = e
+        self.assertEqual(type(outcome), NoMatchingMethodError)
+
+
+suite = unittest.TestLoader().loadTestsFromTestCase(TestMultimethods)
+unittest.TextTestRunner(verbosity=2).run(suite)        
