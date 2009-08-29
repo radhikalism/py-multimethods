@@ -1,0 +1,19 @@
+Information about py-multimethods:
+
+multimethods.py provides a simplistic implementation of Clojure-like
+multimethods for Python 2.4 or later.
+
+Included classes:
+  * Multimethod: instantiates to an object to which
+    implementing methods belong.  Methods are added via the
+    static Multimethod.add() decorator.  Methods can be removed
+    or prioritized using Multimethod.remove() and Multimethod.prefer()
+    respectively.
+
+  * NoMatchingMethodError: thrown when there is no implementing
+    method found for a call with some given arguments.  This implies
+    that no default method was added.
+
+Methods can only be defined at the top level global namespace.
+
+See tests.py for an example of usage.
