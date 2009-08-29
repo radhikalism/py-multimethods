@@ -92,10 +92,15 @@ class Multimethod:
         return decorator
 
     def remove(self, *args, **kwargs):
-        for meth in self.methods:
-            if meth.__dispatch_key__ == args:
-                self.methods.remove(meth)
+        if "default" in kwargs and kwargs["default"]:
+            if self.default_method:
+                self.default_method = None
                 return True
+        else:
+            for meth in self.methods:
+                if meth.__dispatch_key__ == args:
+                    self.methods.remove(meth)
+                    return True
         return False
 
     def prefer(self, key1, key2, **kwargs):
